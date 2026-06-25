@@ -12,14 +12,18 @@ def load_seen():
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                return set(json.load(f))
+                data = json.load(f)
+                if isinstance(data, list):
+                    # 遷移舊資料，將陣列轉換成字典
+                    return {num: {} for num in data}
+                return data
         except Exception:
-            return set()
-    return set()
+            return {}
+    return {}
 
 def save_seen(seen):
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(list(seen), f, indent=4)
+        json.dump(seen, f, indent=4, ensure_ascii=False)
 
 def notify(number, country):
     try:
@@ -78,10 +82,22 @@ def check_numbers(page, seen):
                 is_within_a_day = re.search(r'(hour|minute|second)s?\s+ago', relative_time, re.IGNORECASE) or "just now" in relative_time.lower()
                 
                 if is_within_a_day:
+                    link_elem = item.ele('tag:a')
+                    href = link_elem.attr('href') if link_elem else ""
+                    full_link = f"https://smspva.com{href}" if href else ""
+                    
                     formatted_added = f"Added {relative_time} ({date_str})"
                     print(f"發現新號碼: {number} ({country}) - {formatted_added}")
                     notify(number, country)
-                    seen.add(number)
+                    
+                    seen[number] = {
+                        "number": number,
+                        "country": country,
+                        "link": full_link,
+                        "added_time": date_str,
+                        "relative_time": relative_time,
+                        "discovered_at": time.strftime('%Y-%m-%d %H:%M:%S')
+                    }
                     new_found += 1
                 
     if new_found > 0:
