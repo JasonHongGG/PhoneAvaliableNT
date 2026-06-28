@@ -7,7 +7,8 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     PushMessageRequest,
-    TextMessage
+    FlexMessage,
+    FlexContainer
 )
 
 class ConsoleNotifier(Notifier):
@@ -27,12 +28,102 @@ class LineNotifier(Notifier):
             return
             
         try:
+            flex_content = {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "New Free Number",
+                            "weight": "bold",
+                            "color": "#1DB446",
+                            "size": "sm"
+                        },
+                        {
+                            "type": "text",
+                            "text": phone.number,
+                            "weight": "bold",
+                            "size": "xl",
+                            "margin": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": phone.country,
+                            "size": "xs",
+                            "color": "#aaaaaa",
+                            "wrap": True
+                        },
+                        {
+                            "type": "separator",
+                            "margin": "xxl"
+                        },
+                        {
+                            "type": "box",
+                            "layout": "vertical",
+                            "margin": "xxl",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "box",
+                                    "layout": "horizontal",
+                                    "contents": [
+                                        {"type": "text", "text": "Added", "size": "sm", "color": "#555555", "flex": 0},
+                                        {"type": "text", "text": phone.added_time, "size": "sm", "color": "#111111", "align": "end"}
+                                    ]
+                                },
+                                {
+                                    "type": "box",
+                                    "layout": "horizontal",
+                                    "contents": [
+                                        {"type": "text", "text": "Relative", "size": "sm", "color": "#555555", "flex": 0},
+                                        {"type": "text", "text": phone.relative_time, "size": "sm", "color": "#111111", "align": "end"}
+                                    ]
+                                },
+                                {
+                                    "type": "box",
+                                    "layout": "horizontal",
+                                    "contents": [
+                                        {"type": "text", "text": "Discovered", "size": "sm", "color": "#555555", "flex": 0},
+                                        {"type": "text", "text": phone.discovered_at, "size": "sm", "color": "#111111", "align": "end"}
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+
+            if phone.link:
+                flex_content["footer"] = {
+                    "type": "box",
+                    "layout": "vertical",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "height": "sm",
+                            "action": {
+                                "type": "uri",
+                                "label": "GO TO SMSPVA",
+                                "uri": phone.link
+                            }
+                        }
+                    ],
+                    "flex": 0
+                }
+
             with ApiClient(self.configuration) as api_client:
                 line_bot_api = MessagingApi(api_client)
                 line_bot_api.push_message(
                     PushMessageRequest(
                         to=self.target_id,
-                        messages=[TextMessage(text=f"新免費號碼可用！\n國家: {phone.country}\n號碼: {phone.number}")]
+                        messages=[FlexMessage(
+                            alt_text=f"新免費號碼可用！ ({phone.country} {phone.number})",
+                            contents=FlexContainer.from_dict(flex_content)
+                        )]
                     )
                 )
                 print("LINE 通知發送成功！")

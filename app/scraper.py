@@ -60,7 +60,7 @@ class SmspvaScraper(Scraper):
                     if is_within_a_day:
                         link_elem = item.ele('tag:a')
                         href = link_elem.attr('href') if link_elem else ""
-                        full_link = f"https://smspva.com{href}" if href else ""
+                        full_link = href if href.startswith('http') else (f"https://smspva.com{href}" if href else "")
                         
                         phone = PhoneNumber(
                             number=number,
