@@ -8,3 +8,4 @@ class Config:
     DATA_FILE = "seen_numbers.json"
     LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
     LINE_USER_ID = os.getenv('LINE_USER_ID')
+    LINE_GROUP_ID = os.getenv('LINE_GROUP_ID')

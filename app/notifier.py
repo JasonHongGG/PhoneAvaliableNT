@@ -15,15 +15,15 @@ class ConsoleNotifier(Notifier):
         print(f"[{phone.discovered_at}] 終端機通知 - 發現新號碼: {phone.number} ({phone.country}) - 於 {phone.relative_time} 加入")
 
 class LineNotifier(Notifier):
-    def __init__(self, channel_access_token: str = Config.LINE_CHANNEL_ACCESS_TOKEN, user_id: str = Config.LINE_USER_ID):
-        self.user_id = user_id
+    def __init__(self, channel_access_token: str = Config.LINE_CHANNEL_ACCESS_TOKEN, target_id: str = None):
+        self.target_id = target_id or Config.LINE_GROUP_ID or Config.LINE_USER_ID
         self.configuration = None
         if channel_access_token:
             self.configuration = Configuration(access_token=channel_access_token)
 
     def notify(self, phone: PhoneNumber) -> None:
-        if not self.configuration or not self.user_id:
-            print("LINE Bot 尚未設定 (請檢查 .env)，略過 LINE 通知。")
+        if not self.configuration or not self.target_id:
+            print("LINE Bot 尚未設定 (請檢查 .env 的 LINE_GROUP_ID 或 LINE_USER_ID)，略過 LINE 通知。")
             return
             
         try:
@@ -31,7 +31,7 @@ class LineNotifier(Notifier):
                 line_bot_api = MessagingApi(api_client)
                 line_bot_api.push_message(
                     PushMessageRequest(
-                        to=self.user_id,
+                        to=self.target_id,
                         messages=[TextMessage(text=f"新免費號碼可用！\n國家: {phone.country}\n號碼: {phone.number}")]
                     )
                 )
