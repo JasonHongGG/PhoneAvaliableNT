@@ -6,5 +6,4 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "drissionpage>=4.1.1.4",
-    "winotify>=1.1.0",
 ]

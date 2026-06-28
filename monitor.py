@@ -3,7 +3,6 @@ import os
 import re
 import time
 from DrissionPage import ChromiumPage, ChromiumOptions
-from winotify import Notification, audio
 
 DATA_FILE = "seen_numbers.json"
 CHECK_INTERVAL_SECONDS = 300  # 檢查間隔：5分鐘
@@ -24,17 +23,6 @@ def load_seen():
 def save_seen(seen):
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(seen, f, indent=4, ensure_ascii=False)
-
-def notify(number, country):
-    try:
-        toast = Notification(app_id="SMS Free Numbers Monitor",
-                             title="新免費號碼可用！",
-                             msg=f"國家: {country}\n號碼: {number}",
-                             duration="short")
-        toast.set_audio(audio.Default, loop=False)
-        toast.show()
-    except Exception as e:
-        print(f"通知發送失敗: {e}")
 
 def check_numbers(page, seen):
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 正在檢查新號碼...")
@@ -88,7 +76,6 @@ def check_numbers(page, seen):
                     
                     formatted_added = f"Added {relative_time} ({date_str})"
                     print(f"發現新號碼: {number} ({country}) - {formatted_added}")
-                    notify(number, country)
                     
                     seen[number] = {
                         "number": number,
