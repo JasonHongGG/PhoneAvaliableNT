@@ -107,7 +107,7 @@ class LineNotifier(Notifier):
                             "height": "sm",
                             "action": {
                                 "type": "uri",
-                                "label": "GO TO SMSPVA",
+                                "label": "GO TO SMS",
                                 "uri": phone.link
                             }
                         }

@@ -1,17 +1,38 @@
 import re
 import time
+from functools import wraps
 from typing import List, Dict
 from DrissionPage import ChromiumPage, ChromiumOptions
+from DrissionPage.errors import PageDisconnectedError, BrowserConnectError
 from app.interfaces import Scraper
 from app.models import PhoneNumber
 
+def auto_reconnect_browser(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except (PageDisconnectedError, BrowserConnectError) as e:
+            print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 檢測到瀏覽器連線斷開 ({e.__class__.__name__})，正在重新啟動瀏覽器...")
+            try:
+                self.close()
+            except Exception:
+                pass
+            self._init_browser()
+            return func(self, *args, **kwargs)
+    return wrapper
+
 class SmspvaScraper(Scraper):
     def __init__(self):
+        self._init_browser()
+
+    def _init_browser(self):
         co = ChromiumOptions()
         co.headless(True)  # 無頭模式，不干擾使用者
         self.page = ChromiumPage(co)
         self.url = 'https://smspva.com/free-phone-numbers'
 
+    @auto_reconnect_browser
     def fetch_new_numbers(self, seen_numbers: Dict[str, dict]) -> List[PhoneNumber]:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 正在檢查新號碼...")
         self.page.get(self.url)
