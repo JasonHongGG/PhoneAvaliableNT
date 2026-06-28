@@ -2,7 +2,23 @@ import json
 import os
 import re
 import time
+from dotenv import load_dotenv
 from DrissionPage import ChromiumPage, ChromiumOptions
+from linebot.v3.messaging import (
+    Configuration,
+    ApiClient,
+    MessagingApi,
+    PushMessageRequest,
+    TextMessage
+)
+
+load_dotenv()
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
+LINE_USER_ID = os.getenv('LINE_USER_ID')
+
+configuration = None
+if LINE_CHANNEL_ACCESS_TOKEN:
+    configuration = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 
 DATA_FILE = "seen_numbers.json"
 CHECK_INTERVAL_SECONDS = 300  # 檢查間隔：5分鐘
@@ -23,6 +39,24 @@ def load_seen():
 def save_seen(seen):
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(seen, f, indent=4, ensure_ascii=False)
+
+def notify_line(number, country):
+    if not configuration or not LINE_USER_ID:
+        print("LINE Bot 尚未設定 (請檢查 .env)，略過通知。")
+        return
+        
+    try:
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.push_message(
+                PushMessageRequest(
+                    to=LINE_USER_ID,
+                    messages=[TextMessage(text=f"新免費號碼可用！\n國家: {country}\n號碼: {number}")]
+                )
+            )
+            print("LINE 通知發送成功！")
+    except Exception as e:
+        print(f"LINE 通知發送失敗: {e}")
 
 def check_numbers(page, seen):
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 正在檢查新號碼...")
@@ -76,6 +110,7 @@ def check_numbers(page, seen):
                     
                     formatted_added = f"Added {relative_time} ({date_str})"
                     print(f"發現新號碼: {number} ({country}) - {formatted_added}")
+                    notify_line(number, country)
                     
                     seen[number] = {
                         "number": number,

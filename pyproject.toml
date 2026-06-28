@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "drissionpage>=4.1.1.4",
+    "line-bot-sdk>=3.23.1",
+    "python-dotenv>=1.2.2",
 ]
