@@ -1,44 +1,26 @@
 import re
 import time
-from functools import wraps
 from typing import List, Dict
-from DrissionPage import ChromiumPage, ChromiumOptions
-from DrissionPage.errors import PageDisconnectedError, BrowserConnectError
-from app.interfaces import Scraper
-from app.models import PhoneNumber
+from app.core.interfaces import Scraper
+from app.core.models import PhoneNumber
+from app.core.browser import BrowserManager
+from app.scrapers.base import auto_reconnect_browser
+from app.scrapers.factory import ScraperFactory
 
-def auto_reconnect_browser(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        try:
-            return func(self, *args, **kwargs)
-        except (PageDisconnectedError, BrowserConnectError) as e:
-            print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 檢測到瀏覽器連線斷開 ({e.__class__.__name__})，正在重新啟動瀏覽器...")
-            try:
-                self.close()
-            except Exception:
-                pass
-            self._init_browser()
-            return func(self, *args, **kwargs)
-    return wrapper
-
+@ScraperFactory.register("smspva")
 class SmspvaScraper(Scraper):
-    def __init__(self):
-        self._init_browser()
-
-    def _init_browser(self):
-        co = ChromiumOptions()
-        co.headless(True)  # 無頭模式，不干擾使用者
-        self.page = ChromiumPage(co)
+    def __init__(self, browser_manager: BrowserManager):
+        self.browser_manager = browser_manager
         self.url = 'https://smspva.com/free-phone-numbers'
 
     @auto_reconnect_browser
     def fetch_new_numbers(self, seen_numbers: Dict[str, dict]) -> List[PhoneNumber]:
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 正在檢查新號碼...")
-        self.page.get(self.url)
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 正在檢查 smspva 新號碼...")
+        page = self.browser_manager.get_page()
+        page.get(self.url)
         time.sleep(3)  # 等待 Vue 渲染
         
-        ul = self.page.ele('.free_numbers_number_list')
+        ul = page.ele('.free_numbers_number_list')
         if not ul:
             print("未找到號碼列表元素。")
             return []
@@ -94,7 +76,3 @@ class SmspvaScraper(Scraper):
                         new_phones.append(phone)
                         
         return new_phones
-
-    def close(self):
-        """Close the browser instance"""
-        self.page.quit()

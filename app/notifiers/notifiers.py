@@ -1,7 +1,7 @@
 from typing import List
-from app.interfaces import Notifier
-from app.models import PhoneNumber
-from app.config import Config
+from app.core.interfaces import Notifier
+from app.core.models import PhoneNumber
+from app.core.config import Config
 from linebot.v3.messaging import (
     Configuration,
     ApiClient,

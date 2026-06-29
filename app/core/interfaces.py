@@ -1,5 +1,5 @@
 from typing import Protocol, List, Dict
-from app.models import PhoneNumber
+from app.core.models import PhoneNumber
 
 class Scraper(Protocol):
     def fetch_new_numbers(self, seen_numbers: Dict[str, dict]) -> List[PhoneNumber]:

@@ -1,12 +1,15 @@
 import time
-from app.interfaces import Storage, Scraper, Notifier
-from app.config import Config
+from typing import List
+from app.core.interfaces import Storage, Scraper, Notifier
+from app.core.config import Config
+from app.core.browser import BrowserManager
 
 class MonitorApp:
-    def __init__(self, scraper: Scraper, storage: Storage, notifier: Notifier):
-        self.scraper = scraper
+    def __init__(self, scrapers: List[Scraper], storage: Storage, notifier: Notifier, browser_manager: BrowserManager):
+        self.scrapers = scrapers
         self.storage = storage
         self.notifier = notifier
+        self.browser_manager = browser_manager
         self.seen = self.storage.load_seen()
 
     def run(self):
@@ -27,17 +30,18 @@ class MonitorApp:
         except KeyboardInterrupt:
             print("\n提醒器已停止。")
         finally:
-            if hasattr(self.scraper, 'close'):
-                self.scraper.close()
+            if self.browser_manager:
+                self.browser_manager.close()
 
     def check_once(self):
-        new_phones = self.scraper.fetch_new_numbers(self.seen)
-        
-        if new_phones:
-            for phone in new_phones:
-                self.notifier.notify(phone)
-                self.seen[phone.number] = phone.to_dict()
+        for scraper in self.scrapers:
+            new_phones = scraper.fetch_new_numbers(self.seen)
             
-            self.storage.save_seen(self.seen)
-        else:
-            print("沒有發現新的號碼。")
+            if new_phones:
+                for phone in new_phones:
+                    self.notifier.notify(phone)
+                    self.seen[phone.number] = phone.to_dict()
+                
+                self.storage.save_seen(self.seen)
+            else:
+                print(f"{scraper.__class__.__name__}: 沒有發現新的號碼。")

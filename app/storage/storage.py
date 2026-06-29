@@ -1,8 +1,8 @@
 import json
 import os
 from typing import Dict
-from app.interfaces import Storage
-from app.config import Config
+from app.core.interfaces import Storage
+from app.core.config import Config
 
 class JsonStorage(Storage):
     def __init__(self, file_path: str = Config.DATA_FILE):

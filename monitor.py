@@ -1,6 +1,9 @@
-from app.storage import JsonStorage
-from app.scraper import SmspvaScraper
-from app.notifier import CompositeNotifier, ConsoleNotifier, LineNotifier
+from app.storage.storage import JsonStorage
+from app.scrapers.factory import ScraperFactory
+# 引入特定的爬蟲實作，以觸發 @ScraperFactory.register
+import app.scrapers.smspva 
+from app.notifiers.notifiers import CompositeNotifier, ConsoleNotifier, LineNotifier
+from app.core.browser import BrowserManager
 from app.monitor_app import MonitorApp
 
 def main():
@@ -13,11 +16,17 @@ def main():
         LineNotifier()
     ])
     
-    # 3. 建立爬蟲層 (Scraper)
-    scraper = SmspvaScraper()
+    # 3. 建立共用的瀏覽器管理員
+    browser_manager = BrowserManager()
+
+    # 4. 建立爬蟲層 (Scrapers)
+    # 這裡可以透過 Factory 建立多個不同的爬蟲
+    scrapers = [
+        ScraperFactory.create("smspva", browser_manager)
+    ]
     
-    # 4. 組合並啟動應用程式
-    app = MonitorApp(scraper=scraper, storage=storage, notifier=notifier)
+    # 5. 組合並啟動應用程式
+    app = MonitorApp(scrapers=scrapers, storage=storage, notifier=notifier, browser_manager=browser_manager)
     app.run()
 
 if __name__ == "__main__":
