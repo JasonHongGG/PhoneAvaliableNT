@@ -9,6 +9,7 @@ class PhoneNumber:
     added_time: str
     relative_time: str
     discovered_at: str
+    source: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -17,7 +18,8 @@ class PhoneNumber:
             "link": self.link,
             "added_time": self.added_time,
             "relative_time": self.relative_time,
-            "discovered_at": self.discovered_at
+            "discovered_at": self.discovered_at,
+            "source": self.source
         }
 
     @classmethod
@@ -28,5 +30,6 @@ class PhoneNumber:
             link=data.get("link", ""),
             added_time=data.get("added_time", ""),
             relative_time=data.get("relative_time", ""),
-            discovered_at=data.get("discovered_at", "")
+            discovered_at=data.get("discovered_at", ""),
+            source=data.get("source", "")
         )

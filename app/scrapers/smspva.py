@@ -71,7 +71,8 @@ class SmspvaScraper(Scraper):
                             link=full_link,
                             added_time=date_str,
                             relative_time=relative_time,
-                            discovered_at=time.strftime('%Y-%m-%d %H:%M:%S')
+                            discovered_at=time.strftime('%Y-%m-%d %H:%M:%S'),
+                            source="PVA"
                         )
                         new_phones.append(phone)
                         

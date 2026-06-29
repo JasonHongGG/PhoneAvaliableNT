@@ -13,7 +13,7 @@ from linebot.v3.messaging import (
 
 class ConsoleNotifier(Notifier):
     def notify(self, phone: PhoneNumber) -> None:
-        print(f"[{phone.discovered_at}] 終端機通知 - 發現新號碼: {phone.number} ({phone.country}) - 於 {phone.relative_time} 加入")
+        print(f"[{phone.discovered_at}] [{phone.source}] 終端機通知 - 發現新號碼: {phone.number} ({phone.country}) - 於 {phone.relative_time} 加入")
 
 class LineNotifier(Notifier):
     def __init__(self, channel_access_token: str = Config.LINE_CHANNEL_ACCESS_TOKEN, target_id: str = None):
@@ -36,7 +36,7 @@ class LineNotifier(Notifier):
                     "contents": [
                         {
                             "type": "text",
-                            "text": "New Free Number",
+                            "text": f"[{phone.source}] New Free Number",
                             "weight": "bold",
                             "color": "#1DB446",
                             "size": "sm"
@@ -121,7 +121,7 @@ class LineNotifier(Notifier):
                     PushMessageRequest(
                         to=self.target_id,
                         messages=[FlexMessage(
-                            alt_text=f"新免費號碼可用！ ({phone.country} {phone.number})",
+                            alt_text=f"[{phone.source}] 新免費號碼可用！ ({phone.country} {phone.number})",
                             contents=FlexContainer.from_dict(flex_content)
                         )]
                     )
